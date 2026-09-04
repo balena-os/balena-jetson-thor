@@ -22,3 +22,6 @@
 [submodule "layers/meta-yocto"]
 	path = layers/meta-yocto
 	url = https://git.yoctoproject.org/meta-yocto
+[submodule "layers/openembedded-core"]
+	path = layers/openembedded-core
+	url = https://git.openembedded.org/openembedded-core
