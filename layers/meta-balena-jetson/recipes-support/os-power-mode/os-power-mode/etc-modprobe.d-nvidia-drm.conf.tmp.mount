@@ -1,0 +1,15 @@
+[Unit]
+Description=Bind mount for /etc/modprobe.d/nvidia-drm.conf.tmp
+Requires=resin-state.service resin-state-reset.service nv-state-files-init.service
+After=resin-state.service resin-state-reset.service nv-state-files-init.service
+ConditionPathExists=/mnt/state/root-overlay/etc/modprobe.d/nvidia-drm.conf.tmp
+RequiresMountsFor=/mnt/state/root-overlay/etc/modprobe.d/nvidia-drm.conf.tmp
+
+[Mount]
+What=/mnt/state/root-overlay/etc/modprobe.d/nvidia-drm.conf.tmp
+Where=/etc/modprobe.d/nvidia-drm.conf.tmp
+Type=none
+Options=bind
+
+[Install]
+WantedBy=multi-user.target
