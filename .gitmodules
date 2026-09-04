@@ -13,3 +13,6 @@
 [submodule "layers/meta-cyclonedx"]
 	path = layers/meta-cyclonedx
 	url = https://github.com/balena-os/meta-cyclonedx
+[submodule "layers/meta-openembedded"]
+	path = layers/meta-openembedded
+	url = https://github.com/openembedded/meta-openembedded.git
