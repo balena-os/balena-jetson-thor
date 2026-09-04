@@ -1,0 +1,52 @@
+Copy jetson boot artifacts during migration, so that the
+QSPI can be flashed trough an UEFI capsule application.
+
+Upstream-Status: Inappropriate [configuration]
+Signed-off-by: Alexandru Costache <alexandru@balena.io>
+
+Index: 1.0-r4/migrate
+===================================================================
+--- 1.0-r4.orig/migrate
++++ 1.0-r4/migrate
+@@ -103,6 +103,8 @@ migrate_enabled() {
+ 
+ # Main module function
+ migrate_run() {
++    jetson_orin_capsule=$(find "${ROOTFS_DIR}" -xdev -type f -name "TEGRA_BL_*Cap*")
++
+     # Find the raw image in the rootfs partition
+     image=$(find "${ROOTFS_DIR}" -xdev -type f -name "${BALENA_IMAGE}")
+     kernel_images=$(find "${ROOTFS_DIR}" -xdev -type f -name "@@KERNEL_IMAGETYPE@@*")
+@@ -113,7 +115,9 @@ migrate_run() {
+             _flash_boot_size=$(du -cb ${FLASH_BOOT_MOUNT} | awk '/total/{print $1}')
+             # shellcheck disable=SC2086
+             _kernel_images_size=$(du -cb ${kernel_images} | awk '/total/{print $1}')
+-            _total_size=$(("$_image_size" + "$_flash_boot_size" + "$_kernel_images_size"))
++            _jetson_orin_capsule_size=$(estimate_size_in_zram "${jetson_orin_capsule}")
++
++            _total_size=$(("$_image_size" + "$_flash_boot_size" + "$_kernel_images_size" + "$_jetson_orin_capsule_size"))
+             memory_check "${_total_size}"
+         else
+             fail "Flash boot partition not found in ${internal_dev}"
+@@ -133,6 +137,21 @@ migrate_run() {
+         # shellcheck disable=SC2086
+         cp -a ${kernel_images} "/tmp"
+ 
++        # If this is a Jetson device, the flasher image may contain
++        # an UEFI capsule.
++        #
++        # The capsule update will be triggered on the next boot
++        # after provisioning.
++        if [ -f "${jetson_orin_capsule}" ]; then
++            cp "${jetson_orin_capsule}" "/tmp/"
++            info "Copied ${jetson_orin_capsule}"
++        fi
++
++
++
++
++
++
+         # Need to source this again to set CONFIG_PATH correctly
+         unset CONFIG_PATH
+         # shellcheck disable=SC1091
