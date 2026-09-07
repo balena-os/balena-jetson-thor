@@ -1,7 +1,7 @@
 PACKAGE_INSTALL:remove = " mdraid"
 PACKAGE_INSTALL:remove = " initramfs-module-recovery"
 
-PACKAGE_INSTALL:append = " mtd-utils fatrw gptfdisk kernel-module-spi-tegra210-quad setup-nv-boot-control"
+PACKAGE_INSTALL:append = " mtd-utils fatrw gptfdisk kernel-module-spi-tegra210-quad setup-nv-boot-control tegra-redundant-boot-base"
 PACKAGE_INSTALL:append = " \
     tegra-firmware-xusb \
     kernel-module-nvme \
