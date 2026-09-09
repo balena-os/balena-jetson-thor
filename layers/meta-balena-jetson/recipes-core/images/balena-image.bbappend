@@ -7,7 +7,7 @@ do_image_balenaos_img[depends] += " tegra-flash-dry:do_deploy l4t-launcher-extli
 # however that value is not aligned to 4096,
 # so we use the next closer value
 DEVICE_SPECIFIC_SPACE:jetson-agx-thor-devkit = "2797568"
-BALENA_BOOT_SIZE:jetson-agx-thor-devkit = "97280"
+BALENA_BOOT_SIZE:jetson-agx-thor-devkit = "194560"
 IMAGE_ROOTFS_SIZE:jetson-agx-thor-devkit = "1966080"
 
 DEPENDS:append = " tegra-espimage "
