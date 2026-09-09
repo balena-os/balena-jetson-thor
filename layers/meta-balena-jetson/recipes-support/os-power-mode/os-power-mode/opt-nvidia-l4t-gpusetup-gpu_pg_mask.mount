@@ -1,0 +1,15 @@
+[Unit]
+Description=Bind mount for /opt/nvidia/l4t-gpusetup/gpu_pg_mask
+Requires=resin-state.service resin-state-reset.service nv-state-files-init.service
+After=resin-state.service resin-state-reset.service nv-state-files-init.service
+ConditionPathExists=/mnt/state/root-overlay/opt/nvidia/l4t-gpusetup/gpu_pg_mask
+RequiresMountsFor=/mnt/state/root-overlay/opt/nvidia/l4t-gpusetup/gpu_pg_mask
+
+[Mount]
+What=/mnt/state/root-overlay/opt/nvidia/l4t-gpusetup/gpu_pg_mask
+Where=/opt/nvidia/l4t-gpusetup/gpu_pg_mask
+Type=none
+Options=bind
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,144 @@
+#!/bin/sh
+set -o errexit
+
+# Script which writes the appropriate
+# device tree with embedded cmdline
+# and updates the kernel, as well as
+# the rest of the bootloader binaries
+. /usr/libexec/os-helpers-fs
+. /usr/sbin/balena-config-vars
+source /usr/bin/uefi_common.func
+
+efivars_dir="/sys/firmware/efi/efivars/"
+# See https://github.com/OE4T/meta-tegra/blob/master/recipes-bsp/tools/setup-nv-boot-control/setup-nv-boot-control.sh.in
+os_indications_efivar="${efivars_dir}OsIndications-8be4df61-93ca-11d2-aa0d-00e098032b8c"
+tmp_file="/tmp/platformspecfile.bin"
+
+target_l4t_version="@L4T_VER@"
+device_type="jetson-agx-thor-devkit"
+
+DURING_UPDATE=${DURING_UPDATE:-0}
+internal_storage="/dev/$(findmnt --noheadings --canonicalize --output SOURCE "/mnt/sysroot/active/" | xargs lsblk -no pkname)"
+uefi_capsule="/opt/tegra-binaries/TEGRA_BL.Cap"
+
+# A/B rootfs switch is handled by balena and not by the UEFI firmware,
+# we thus make use of this existing uefi variable, which is otherwise
+# unsed by the UEFI in this configuration, to check if the UEFI capsule
+# has been applied
+qspi_flashed() {
+    ROOTFS_RETRY_COUNT_VAR="781e084c-a330-417c-b678-38e696380cb9-RootfsRetryCountMax"
+
+    rrcm_res=$(efivar -d -n "$ROOTFS_RETRY_COUNT_VAR" 2>/dev/null | xargs)
+
+    if [ "$rrcm_res" == "9 0 0 0" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+l4t_firmware_match() {
+    fw_version=$(/usr/sbin/nvbootctrl dump-slots-info | grep -E -o 'Current version: [0-9]+[.]+[0-9]+[.]+[0-9]' | awk '{print $3}')
+
+    if [ "$target_l4t_version" == "$fw_version" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+write_jetson_update_efivars() {
+    info "Writing of jetson efivars triggered from old OS hook"
+    if [ -d $efivars_dir ]; then
+        printf "%b" '\x07\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00' > ${tmp_file}
+        dd if=${tmp_file} of=${os_indications_efivar}; bs=12;
+        info "OsIndications variable written"
+    else
+        fail "sysfs not accessible!"
+        return 1
+    fi
+
+    return 0
+}
+
+info "Bootloader blob is $uefi_capsule"
+
+check_and_update_esp_flags() {
+    esp_type="C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+    esp_index="3"
+
+    esp_part_type=$(sfdisk --part-type $internal_storage $esp_index)
+
+    if [ "$esp_type" != "$esp_part_type" ]; then
+        info "type change needed on esp partition"
+	sfdisk --part-type $internal_storage $esp_index $esp_type
+	sync
+    else
+        info "ok - esp partition has esp flag, no changes required"
+    fi
+}
+
+do_capsule_update() {
+    if mount | grep -q "esp_mount_point"; then
+        umount /var/run/esp_mount_point
+    fi
+
+    mkdir -p /var/run/esp_mount_point
+    esp_dev=$(get_state_path_from_label "esp")
+    retries=0
+    max_retries=5
+
+    while [ ! -L "$esp_dev" ]
+    do
+        info "Symlink $esp_dev for esp partition not found, will retry in a second..."
+        sleep 1;
+        retries=$(( $retries + 1 ))
+        if [ $retries -ge $max_retries ]; then
+            info "Retries limit reached and $dst is still not present, bail out!"
+            exit 1
+        fi
+        esp_dev=$(get_state_path_from_label "esp")
+        info "State path after retry is $dst"
+    done
+
+    if [ ! -L "$esp_dev" ]; then
+        fail "esp partition not found"
+    fi
+
+    info "Mounting esp partition..."
+    mount $esp_dev /var/run/esp_mount_point
+    info "Mounted esp partition"
+
+    if ! qspi_flashed || ! l4t_firmware_match; then
+        # Unzip capsule to the esp partition
+        info "Will extract UEFI Capsule..."
+        mkdir -p /var/run/esp_mount_point/EFI/UpdateCapsule/
+        $CP ${uefi_capsule} /var/run/esp_mount_point/EFI/UpdateCapsule/TEGRA_BL.Cap
+        info "Placed UEFI capsule in esp partition"
+	write_jetson_update_efivars
+    else
+        info "UEFI capsule update is not necessary"
+    fi
+    update_bootaa64_md5sum=$(md5sum /EFI/BOOT/bootaa64.efi | awk '{print $1'})
+    existing_bootaa64_md5sum=$(md5sum /var/run/esp_mount_point/EFI/BOOT/bootaa64.efi | awk '{print $1'})
+
+    if [ ! "$existing_bootaa64_md5sum" = "$update_bootaa64_md5sum" ]; then
+        $CP /EFI/BOOT/bootaa64.efi /var/run/esp_mount_point/EFI/BOOT/bootaa64.efi
+	info "Updated bootaa64.efi in esp partition"
+    else
+        info "Updating bootaa64.efi in esp partition is not necessary"
+    fi
+    sync
+    info "Unmounting esp partition"
+    umount /var/run/esp_mount_point
+    info "Unmounted esp partition"
+    check_and_update_esp_flags
+}
+
+info "Pre-update A/B slots info:"
+info "=========================="
+/usr/sbin/nvbootctrl dump-slots-info || true
+info "=========================="
+
+do_capsule_update
+sync /mnt/boot/

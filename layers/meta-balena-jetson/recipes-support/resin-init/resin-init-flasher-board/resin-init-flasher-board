@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+. /usr/libexec/os-helpers-logging
+. /usr/libexec/os-helpers-fs
+
+source /usr/libexec/jetson-qspi-helpers
+
+FLASHER_CONF_FILE=/etc/resin-init-flasher.conf
+INTERNAL_BOOT_MP="/tmp/internal_boot"
+
+if [ -f ${FLASHER_CONF_FILE} ]; then
+    source ${FLASHER_CONF_FILE}
+else
+    fail "No configuration for resin-init-flasher found."
+fi
+
+log "Will attempt UEFI capsule update on next boot"
+
+try_capsule_update $INTERNAL_BOOT_MP $INTERNAL_BOOT_MP

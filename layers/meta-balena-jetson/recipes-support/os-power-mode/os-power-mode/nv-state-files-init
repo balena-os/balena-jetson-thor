@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e
+
+. /usr/libexec/os-helpers-logging
+
+# 1. Modprobe Configuration Targets
+modprobe_conf_files=( "nvidia-drm.conf" )
+MNT_STATE_MODPROBE_CONF_PATH="/mnt/state/root-overlay/etc/modprobe.d"
+
+# 2. GPU Power Gating Setup Targets
+gpu_setup_files=( "gpu_pg_mask" )
+MNT_STATE_GPU_SETUP_PATH="/mnt/state/root-overlay/opt/nvidia/l4t-gpusetup"
+
+init_system_state_files() {
+    # ==========================================
+    # PHASE 1: Initialize /etc/modprobe.d/ Files
+    # ==========================================
+    if [ ! -d "${MNT_STATE_MODPROBE_CONF_PATH}" ]; then
+        mkdir -p "${MNT_STATE_MODPROBE_CONF_PATH}"
+    fi
+    for modprobe_file in "${modprobe_conf_files[@]}"; do
+        if [ -f "/etc/modprobe.d/${modprobe_file}" ] && [ ! -f "${MNT_STATE_MODPROBE_CONF_PATH}/${modprobe_file}" ]; then
+            info "Initialized ${MNT_STATE_MODPROBE_CONF_PATH}/${modprobe_file}"
+            cp "/etc/modprobe.d/${modprobe_file}" "${MNT_STATE_MODPROBE_CONF_PATH}/${modprobe_file}"
+            touch "${MNT_STATE_MODPROBE_CONF_PATH}/${modprobe_file}.tmp"
+        fi
+    done
+
+    # ==================================================
+    # PHASE 2: Initialize /opt/nvidia/l4t-gpusetup/ Files
+    # ==================================================
+    if [ ! -d "${MNT_STATE_GPU_SETUP_PATH}" ]; then
+        mkdir -p "${MNT_STATE_GPU_SETUP_PATH}"
+    fi
+    for setup_file in "${gpu_setup_files[@]}"; do
+        if [ -f "/opt/nvidia/l4t-gpusetup/${setup_file}" ] && [ ! -f "${MNT_STATE_GPU_SETUP_PATH}/${setup_file}" ]; then
+            info "Initialized ${MNT_STATE_GPU_SETUP_PATH}/${setup_file}"
+            cp "/opt/nvidia/l4t-gpusetup/${setup_file}" "${MNT_STATE_GPU_SETUP_PATH}/${setup_file}"
+            touch "${MNT_STATE_GPU_SETUP_PATH}/${setup_file}.tmp"
+        fi
+    done
+}
+
+init_system_state_files
