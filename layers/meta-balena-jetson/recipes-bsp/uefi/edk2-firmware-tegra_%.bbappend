@@ -15,3 +15,9 @@ do_deploy:append() {
 }
 
 do_deploy[nostamp] = "1"
+do_patch[nostamp] = "1"
+
+# Enable debug logs
+EDK2_BUILD_RELEASE = "0"
+
+SOURCE_DATE_EPOCH = "${@int(time.time())}"
