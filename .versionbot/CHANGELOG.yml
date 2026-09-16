@@ -1,1 +1,35 @@
-[]
+- commits:
+    - subject: "layers/meta-balena: Update to v8.0.9"
+      hash: 66308070236967dc00fe9255c79f6caa492bd561
+      body: ""
+      footer:
+        Changelog-entry: "layers/meta-balena: Update to v8.0.9"
+        changelog-entry: "layers/meta-balena: Update to v8.0.9"
+        Signed-off-by: Alexandru Costache <alexandru@balena.io>
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      author: Alexandru Costache
+      nested: []
+    - subject: "recipes-support: Add recipe appends for HUP hooks, power and cooling"
+      hash: 0e4064ab37bb0c799dad484105244487b0dd21a6
+      body: |
+        ... as well as for resin-init-flasher and qspi update packages
+      footer:
+        Changelog-entry: "recipes-support: Add recipe appends for HUP hooks, power and cooling"
+        changelog-entry: "recipes-support: Add recipe appends for HUP hooks, power and cooling"
+        Signed-off-by: Alexandru Costache <alexandru@balena.io>
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      author: Alexandru Costache
+      nested: []
+    - subject: "recipes-bsp/uefi: Add patches for AGX Thor integration"
+      hash: 143f3de4909a202cb3bb3f27230852f94dff075d
+      body: ""
+      footer:
+        Changelog-entry: "recipes-bsp/uefi: Add patches for AGX Thor integration"
+        changelog-entry: "recipes-bsp/uefi: Add patches for AGX Thor integration"
+        Signed-off-by: Alexandru Costache <alexandru@balena.io>
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      author: Alexandru Costache
+      nested: []
+  version: 8.0.9
+  title: ""
+  date: 2026-09-16T07:45:52.077Z
