@@ -1,0 +1,137 @@
+inherit kernel-resin deploy
+
+SCMVERSION = "n"
+
+BALENA_CONFIGS:remove = " mdraid"
+
+BALENA_CONFIGS:append = " debug_kmemleak "
+
+BALENA_CONFIGS[debug_kmemleak] = " \
+    CONFIG_HAVE_DEBUG_KMEMLEAK=n \
+    CONFIG_DEBUG_KMEMLEAK=n \
+    CONFIG_HAVE_DEBUG_KMEMLEAK=n \
+    CONFIG_DEBUG_KMEMLEAK_SCAN_ON=n \
+    CONFIG_FUNCTION_TRACER=n \
+    CONFIG_HAVE_FUNCTION_TRACER=n \
+    CONFIG_PSTORE=n \
+"
+
+BALENA_CONFIGS:append = " compat"
+BALENA_CONFIGS[compat] = " \
+                CONFIG_COMPAT=y \
+"
+
+BALENA_CONFIGS:append = " cdc-wdm"
+BALENA_CONFIGS[cdc-wdm] = " \
+                CONFIG_USB_WDM=m \
+"
+
+BALENA_CONFIGS:append = " sierra-net"
+BALENA_CONFIGS[sierra-net] = " \
+                CONFIG_USB_SIERRA_NET=m \
+		CONFIG_PROC_KCORE=y \
+"
+
+BALENA_CONFIGS_DEPS[sierra-net] = " \
+                CONFIG_USB_USBNET=m \
+"
+
+BALENA_CONFIGS:append = " cdc-ncm"
+BALENA_CONFIGS[cdc-ncm] = " \
+                CONFIG_USB_NET_CDC_NCM=m \
+"
+
+BALENA_CONFIGS_DEPS[cdc-ncm] = " \
+                CONFIG_USB_USBNET=m \
+"
+
+BALENA_CONFIGS:append = " mii"
+
+BALENA_CONFIGS:append = " rtl8822ce "
+BALENA_CONFIGS[rtl8822ce] = " \
+		CONFIG_RTL8822CE=m \
+		CONFIG_RTK_BTUSB=m \
+"
+
+BALENA_CONFIGS:append = " xudc"
+
+BALENA_CONFIGS[xudc] = " \
+    CONFIG_USB_TEGRA_XUDC=m \
+"
+
+BALENA_CONFIGS:append = " mtd nvme"
+BALENA_CONFIGS[mtd] = " \
+    CONFIG_MTD_BLOCK=m \
+"
+
+BALENA_CONFIGS:append = " iwlwifi"
+BALENA_CONFIGS[iwlwifi] = " \
+    CONFIG_IWLWIFI=m \
+    CONFIG_IWLDVM=m \
+    CONFIG_IWLMVM=m \
+"
+
+# Needed starting with Jetpack 6
+# so the initramfs can mount the
+# NVME partitions
+BALENA_CONFIGS[nvme] = " \
+    CONFIG_NVME_CORE=m \
+    CONFIG_BLK_DEV_NVME=m \
+    CONFIG_NVME_FABRICS=m \
+    CONFIG_NVME_TCP=m \
+    CONFIG_NVME_TARGET=m \
+    CONFIG_NVME_TARGET_TCP=m \
+"
+
+# These drivers needs to be built-in, otherwise
+# the nvme cannot be detected in the initramfs,
+# when trying to boot from it.
+BALENA_CONFIGS[pcie] = " \
+    CONFIG_PCIE_TEGRA194=m \
+    CONFIG_PCIE_TEGRA194_HOST=m \
+    CONFIG_PCIE_TEGRA194_EP=m \
+    CONFIG_PHY_TEGRA194_P2U=m \
+"
+
+BALENA_CONFIGS:append = " rfcomm "
+BALENA_CONFIGS[rfcomm] = " \
+    CONFIG_BT_RFCOMM=m \
+    CONFIG_BT_RFCOMM_TTY=y \
+"
+
+L4TVER = " l4tver=${L4T_VERSION}"
+
+KERNEL_ARGS += " console=tty1 ${@bb.utils.contains('DISTRO_FEATURES','osdev-image',' mminit_loglevel=4 console=ttyUTC0,115200','quiet splash vt.global_cursor_default=0 consoleblank=0',d)} l4tver=${L4T_VERSION} rootdelay=1 roottimeout=60 earlycon=tegra_utc,mmio32,0xc5a0000 "
+
+# Let's not disable this by default
+# in our integration, although upstream does.
+KERNEL_ARGS:remove = "nospectre_bhb"
+KERNEL_ARGS:remove = "firmware_class.path=/etc/firmware"
+
+generate_extlinux_conf() {
+    mkdir -p ${UNPACKDIR}/extlinux || true
+    kernelRootspec="${KERNEL_ARGS}" ; cat >${UNPACKDIR}/extlinux/extlinux.conf << EOF
+DEFAULT primary
+TIMEOUT 10
+MENU TITLE Boot Options
+LABEL primary
+      MENU LABEL primary ${KERNEL_IMAGETYPE}
+      FDT default
+      LINUX /boot/${KERNEL_IMAGETYPE}
+      APPEND \${cbootargs} ${kernelRootspec} rootwait
+EOF
+
+}
+
+
+do_install:append() {
+    generate_extlinux_conf
+    install -d ${D}/boot/extlinux
+    install -m 0644 ${UNPACKDIR}/extlinux/extlinux.conf ${D}/boot/extlinux/
+}
+
+PACKAGES =+ "${PN}-extlinux"
+FILES:${PN}-extlinux = " /boot/extlinux/extlinux.conf "
+RRECOMMENDS:${PN} = "${PN}-extlinux"
+
+do_install[depends] += "${@['', '${INITRAMFS_IMAGE}:do_image_complete'][(d.getVar('INITRAMFS_IMAGE', True) or '') != '' and (d.getVar('TEGRA_INITRAMFS_INITRD', True) or '') == "1"]}"

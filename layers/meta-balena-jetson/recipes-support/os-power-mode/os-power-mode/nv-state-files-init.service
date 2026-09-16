@@ -1,0 +1,15 @@
+[Unit]
+Description=Initialize nv modprobe conf files in state partition
+DefaultDependencies=no
+Requires=var-volatile.mount resin-state.service resin-state-reset.service
+After=var-volatile.mount resin-state.service resin-state-reset.service
+Before=umount.target
+Conflicts=umount.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@BASE_BINDIR@/sh @BINDIR@/nv-state-files-init
+
+[Install]
+WantedBy=multi-user.target

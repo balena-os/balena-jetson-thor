@@ -1,0 +1,10 @@
+recovery:none.bin:204800
+recovery-dtb:none.bin:1536
+esp:tegra-espimage-jetson-agx-thor-devkit.esp:1048576
+A_reserved_on_user:none.bin:787968
+recovery_alt:none.bin:204800
+recovery-dtb_alt:none.bin:1536
+esp_alt:none.bin:1048576
+B_reserved_on_user:none.bin:787968
+UDA:none.bin:819200
+reserved:none.bin:686080
