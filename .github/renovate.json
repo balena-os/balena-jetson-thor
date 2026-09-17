@@ -1,0 +1,14 @@
+{
+	"extends": [
+		"github>balena-os/renovate-config"
+	],
+	"packageRules": [
+		{
+			"description": "Disable automated meta-tegra updates because L4T changes require adapting the integration layer",
+			"matchManagers": ["git-submodules"],
+			"matchDepNames": ["layers/meta-tegra"],
+			"enabled": false
+		}
+	],
+	"enabled": false
+}
