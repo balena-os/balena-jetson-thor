@@ -1,4 +1,30 @@
 - commits:
+    - subject: "layers/meta-balena: Update to v8.0.10"
+      hash: d291c4948fee9a7875176d4345f0c111f7b58216
+      body: ""
+      footer:
+        Changelog-entry: "layers/meta-balena: Update to v8.0.10"
+        changelog-entry: "layers/meta-balena: Update to v8.0.10"
+        Signed-off-by: Alexandru Costache <alexandru@balena.io>
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      author: Alexandru Costache
+      nested: []
+    - subject: ".github: Disable renovate updates for meta-tegra layer"
+      hash: 113d5aa614339689bc19b18745e1acf6fcc135ec
+      body: |
+        ... because the Wrynose branch has multiple L4T revisions,
+        and we handle BSP updates separately.
+      footer:
+        Changelog-entry: ".github: Disable renovate updates for meta-tegra layer"
+        changelog-entry: ".github: Disable renovate updates for meta-tegra layer"
+        Signed-off-by: Alexandru Costache <alexandru@balena.io>
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      author: Alexandru Costache
+      nested: []
+  version: 8.0.10
+  title: ""
+  date: 2026-09-18T15:30:51.017Z
+- commits:
     - subject: "layers/meta-balena: Update to v8.0.9"
       hash: 66308070236967dc00fe9255c79f6caa492bd561
       body: ""
