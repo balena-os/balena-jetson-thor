@@ -21,3 +21,20 @@ python () {
             "move meta-tegra forward rather than lowering this floor."
             % (pv, floor))
 }
+
+do_configure:prepend() {
+    # 1. Lower Go requirement in go.mod files
+    find ${S} -name "go.mod" -exec sed -i 's/^go 1\.25.*/go 1.24.6/' {} +
+
+    # 2. Fix specDirAsRoot.Chmod in spec.go
+    sed -i 's/specDirAsRoot\.Chmod(filename, s\.permissions)/os.Chmod(filepath.Join(specDir, filename), s.permissions)/g' \
+        ${S}/src/github.com/NVIDIA/nvidia-container-toolkit/pkg/nvcdi/spec/spec.go
+
+    # 3. Fix containerRoot.MkdirAll in params_linux.go
+    sed -i 's/containerRoot\.MkdirAll(hookScratchDirPath\[1:\], 0755)/os.MkdirAll(filepath.Join(containerRootDirPath, hookScratchDirPath[1:]), 0755)/g' \
+        ${S}/src/github.com/NVIDIA/nvidia-container-toolkit/cmd/nvidia-cdi-hook/disable-device-node-modification/params_linux.go
+
+    # 4. Fix containerRoot.MkdirAll and newroot.MkdirAll in ldconfig_linux.go
+    sed -i -E 's/(containerRoot|newroot)\.MkdirAll\(([^,]+),\s*([^)]+)\)/os.MkdirAll(filepath.Join(\1.Name(), \2), \3)/g' \
+        ${S}/src/github.com/NVIDIA/nvidia-container-toolkit/internal/ldconfig/ldconfig_linux.go
+}
