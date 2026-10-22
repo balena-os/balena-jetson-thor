@@ -1,4 +1,18 @@
 - commits:
+    - subject: "layers/meta-balena: Update to v9.0.2"
+      hash: 8b161120b7cd4511cadd3560ee19ff300126f9c7
+      body: ""
+      footer:
+        Changelog-entry: "layers/meta-balena: Update to v9.0.2"
+        changelog-entry: "layers/meta-balena: Update to v9.0.2"
+        Signed-off-by: Alexandru Costache <alexandru@balena.io>
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      author: Alexandru Costache
+      nested: []
+  version: 9.0.2
+  title: ""
+  date: 2026-10-22T08:58:04.516Z
+- commits:
     - subject: "layers/meta-balena: Update to v8.0.10"
       hash: d291c4948fee9a7875176d4345f0c111f7b58216
       body: ""
