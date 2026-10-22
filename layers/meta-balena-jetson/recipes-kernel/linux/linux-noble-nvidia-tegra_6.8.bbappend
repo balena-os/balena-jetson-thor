@@ -99,6 +99,23 @@ BALENA_CONFIGS[rfcomm] = " \
     CONFIG_BT_RFCOMM_TTY=y \
 "
 
+# CONFIG_VIDEOBUF2_DMA_CONTIG cannot be set directly: it is a select-only
+# symbol (tristate, no prompt), so kconfig silently discards it from a config
+# fragment - verified by inspecting the generated .config, which carried no
+# trace of it while the build reported success. Without it tegra_camera fails
+# channel init at vb2_queue_init (WARN_ON(!q->mem_ops)) and /dev/video0 never
+# appears, so CSI capture is broken.
+#
+# Pull it in via a driver that selects it instead. VIDEO_MEM2MEM_DEINTERLACE
+# is the least invasive lever: a generic software m2m driver, claims no Tegra
+# hardware, and its dependencies (V4L_MEM2MEM_DRIVERS, VIDEO_DEV, HAS_DMA) are
+# already satisfied. The in-tree VIDEO_TEGRA_VDE also selects it but would bind
+# hardware NVIDIA's out-of-tree decoder already drives.
+BALENA_CONFIGS:append = " videobuf2 "
+BALENA_CONFIGS[videobuf2] = " \
+    CONFIG_VIDEO_MEM2MEM_DEINTERLACE=m \
+"
+
 L4TVER = " l4tver=${L4T_VERSION}"
 
 KERNEL_ARGS += " console=tty1 ${@bb.utils.contains('DISTRO_FEATURES','osdev-image',' mminit_loglevel=4 console=ttyUTC0,115200','quiet splash vt.global_cursor_default=0 consoleblank=0',d)} l4tver=${L4T_VERSION} rootdelay=1 roottimeout=60 earlycon=tegra_utc,mmio32,0xc5a0000 "
